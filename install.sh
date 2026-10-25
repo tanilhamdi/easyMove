@@ -13,12 +13,21 @@ if [ "${1:-}" = "--uninstall" ]; then
   rm -f "$BIN_DIR/easyMove"
   echo "Removed $BIN_DIR/easyMove"
   echo "Your config was kept: $CFG_FILE"
+  echo "If you added $BIN_DIR to your PATH via install.sh, that line was left in your shell rc."
   exit 0
 fi
 
 if ! command -v g++ >/dev/null 2>&1; then
   echo "Error: g++ not found. Install a C++17 compiler first." >&2
   exit 1
+fi
+
+# fzf is an optional dependency (used for --fzf and when a file is not found)
+if ! command -v fzf >/dev/null 2>&1; then
+  echo "Warning: 'fzf' is not found on your system." >&2
+  echo "         easyMove's interactive selection and fallback features require fzf." >&2
+  echo "         Install it via your package manager (e.g. sudo apt install fzf / sudo pacman -S fzf / brew install fzf)." >&2
+  echo >&2
 fi
 
 echo "Building..."
@@ -42,10 +51,10 @@ fi
 FINAL="Done. Try: easyMove --help"
 
 add_to_path() {
-  case "${SHELL##*/}" in
-    zsh)  RC="${ZDOTDIR:-$HOME}/.zshrc" ;;
-    bash) RC="$HOME/.bashrc" ;;
-    fish)
+  case "${SHELL:-}" in
+    */zsh|zsh)   RC="${ZDOTDIR:-$HOME}/.zshrc" ;;
+    */bash|bash) RC="$HOME/.bashrc" ;;
+    */fish|fish)
       echo "fish shell: run  fish_add_path $BIN_DIR"
       FINAL="Done. Run the fish_add_path command above, then try: easyMove --help"
       return ;;

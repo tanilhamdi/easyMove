@@ -15,6 +15,7 @@ public:
   menu(string option);
   vector<string> readcfg();
   void addPath(string path);
+  void fzf(string input);
   void deletePath(string path);
   void move(string targetFile);
   vector<fs::path> listDirectory();

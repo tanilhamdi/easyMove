@@ -112,6 +112,71 @@ vector<fs::path> menu::listDirectory() {
   return files;
 }
 
+void menu::fzf(string input) {
+  vector<fs::path> ls = listDirectory();
+  fs::path cfgDir = fs::path(this->cfgPath).parent_path();
+  string tempInput = cfgDir / "fzf_input.txt";
+  string tempOutput = cfgDir / "fzf_output.txt";
+
+  ofstream inFile(tempInput);
+  for (int i = 0; i < ls.size(); i++) {
+    inFile << ls[i].string() << "\n";
+  }
+  inFile.close();
+
+  string cmd = "fzf";
+  if (!input.empty()) {
+    cmd += " -q \"" + input + "\"";
+  }
+
+  cmd += " < " + tempInput + " > " + tempOutput;
+  //  cout << "[DEBUG]" << cmd << "\n";
+
+  int result = std::system(cmd.c_str());
+  if (result != 0) {
+    fs::remove(tempInput);
+    fs::remove(tempOutput);
+    cout << "Cancelled.\n";
+    return;
+  }
+
+  ifstream outFile(tempOutput);
+  string selectedPathStr;
+  getline(outFile, selectedPathStr);
+  outFile.close();
+
+  fs::remove(tempInput);
+  fs::remove(tempOutput);
+
+  if (selectedPathStr.empty()) {
+    return;
+  }
+
+  fs::path selectedFile(selectedPathStr);
+  string pwd = fs::current_path();
+  fs::path dst = pwd / selectedFile.filename();
+
+  error_code ec;
+  if (fs::exists(dst, ec)) {
+    cout << dst << " already exists. Overwrite? (y/n): ";
+    string answer;
+    getline(cin, answer);
+
+    if (answer != "y" && answer != "Y") {
+      cout << "Cancelled.\n";
+      return;
+    }
+    fs::remove_all(dst, ec);
+  }
+
+  fs::rename(selectedFile, dst);
+  cout << "Successfully moved: " << dst.filename() << "\n";
+
+  //  for (int i = 0; i < ls.size(); i++) {
+  //    cout << "[DEBUG]" << ls[i].filename() << "\n";
+  //  }
+}
+
 void menu::move(string targetFile) {
 
   string pwd = fs::current_path();
@@ -144,8 +209,9 @@ void menu::move(string targetFile) {
     }
     fs::rename(targetFiles[0], pwd / targetFiles[0].filename());
   } else if (countTarget == 0) {
-    cout << "No Such a File In Your Paths!";
-    std::exit(1);
+    // cout << "No Such a File In Your Paths! \n";
+    fzf(targetFile);
+    return;
   } else {
     for (int i = 0; i < targetFiles.size(); i++) {
       cout << "[" << i << "]" << targetFiles[i] << "\n";

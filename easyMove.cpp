@@ -12,7 +12,9 @@ static void printHelp() {
     easyMove --add, -a [path]    Save a folder (asks for the path if you do not give one)
     easyMove --delete, -d <path> Remove a saved folder (path exactly as shown by --list)
     easyMove --list, -l          Show all saved folders
+    easyMove --fzf, f            Uses fzf for finding the files you want to move easyly
     easyMove --help, -h          Show this help
+
   
   If the same filename exists in several saved folders, you will get a numbered
   list and can pick which one to move.
@@ -46,6 +48,11 @@ int main(int argc, char *argv[]) {
     for (size_t i = 0; i < paths.size(); i++) {
       std::cout << paths[i] << "\n";
     }
+    return 0;
+  }
+
+  if (arg == "--fzf" || arg == "-f") {
+    mainMenu.fzf("");
     return 0;
   }
 
