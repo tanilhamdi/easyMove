@@ -177,6 +177,29 @@ void menu::fzf(string input) {
   //  }
 }
 
+void menu::latest() {
+  vector<fs::path> files = listDirectory();
+  if (files.empty()) {
+    cerr << "No files in Path directories." << "\n";
+    return;
+  }
+
+  fs::file_time_type fileTime;
+  fs::file_time_type newest_time = fs::file_time_type::min();
+  fs::path newest_file;
+
+  for (int i = 0; i < files.size(); i++) {
+    if (fs::last_write_time(files[i]) > newest_time) {
+      newest_file = files[i];
+      newest_time = fs::last_write_time(files[i]);
+    }
+  }
+
+  // cout << "[DEBUG] Latest: " << newest_file.filename() << "\n";
+
+  this->move(newest_file.filename());
+}
+
 void menu::move(string targetFile) {
 
   string pwd = fs::current_path();

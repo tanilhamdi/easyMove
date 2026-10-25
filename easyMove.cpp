@@ -5,24 +5,28 @@
 
 static void printHelp() {
   std::cout
-      << R"(easyMove (alpha) - move a file from your saved folders to the current directory
-  
-  Usage:
-    easyMove <filename>          Find <filename> in your saved folders and move it here
-    easyMove --add, -a [path]    Save a folder (asks for the path if you do not give one)
-    easyMove --delete, -d <path> Remove a saved folder (path exactly as shown by --list)
-    easyMove --list, -l          Show all saved folders
-    easyMove --fzf, f            Uses fzf for finding the files you want to move easyly
-    easyMove --help, -h          Show this help
+      << R"(easyMove - move a file from your saved folders to the current directory
 
-  
-  If the same filename exists in several saved folders, you will get a numbered
-  list and can pick which one to move.
-  
-  Config file:
-    ~/.config/easyMove/easyMove.cfg
-    One folder path per line. Created automatically on the first --add.
-  )";
+Usage:
+  easyMove <filename>           Find <filename> in your saved folders and move it here
+  easyMove --latest, -n         Move the most recently modified file from your saved folders
+  easyMove --fzf, -f            Pick a file from your saved folders with fzf
+  easyMove --add, -a <path>     Save a folder
+  easyMove --delete, -d <path>  Remove a saved folder (path exactly as shown by --list)
+  easyMove --list, -l           Show all saved folders
+  easyMove --help, -h           Show this help
+
+If the same filename exists in several saved folders, you will get a numbered
+list and can pick which one to move. If the name is not found, fzf opens with
+your input as the starting query.
+
+--latest ignores folders, hidden files and unfinished downloads
+(.part, .crdownload).
+
+Config file:
+  ~/.config/easyMove/easyMove.cfg
+  One folder path per line.
+)";
 }
 
 int main(int argc, char *argv[]) {
@@ -56,8 +60,18 @@ int main(int argc, char *argv[]) {
     return 0;
   }
 
+  if (arg == "--latest" || arg == "-n") {
+    mainMenu.latest();
+    return 0;
+  }
+
   if (arg == "--add" || arg == "-a") {
-    mainMenu.addPath(argc > 2 ? argv[2] : "");
+    if (argc < 3) {
+      std::cerr << "Error: --add needs a path. Example: easyMove --add "
+                   "~/Downloads\n";
+      return 1;
+    }
+    mainMenu.addPath(argv[2]);
     return 0;
   }
 

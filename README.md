@@ -2,11 +2,12 @@
 
 Move a file or folder into your current directory by name, without typing the path where it lives.
 
-You save a few folders once (Downloads, Desktop, a USB mount...). After that, `easyMove report.pdf` finds `report.pdf` in any of them and moves it to wherever your terminal is. If the same name exists in several saved folders, you pick which one from a numbered list. If the name is not found at all, easyMove opens [fzf](https://github.com/junegunn/fzf) so you can search for it.
+You save a few folders once (Downloads, Desktop, a USB mount...). After that, `easyMove report.pdf` finds `report.pdf` in any of them and moves it to wherever your terminal is. If the same name exists in several saved folders, you pick which one from a numbered list. If the name is not found at all, easyMove opens [fzf](https://github.com/junegunn/fzf) so you can search for it. Or skip the name entirely: `easyMove --latest` grabs the file you changed or downloaded most recently.
 
 ## Features
 
 - Moves files **and folders** by exact name from your saved folders to the current directory
+- `--latest` moves the most recently modified file from your saved folders
 - Numbered menu when the same name exists in more than one saved folder
 - fzf fallback: if the name is not found, fzf opens with your input as the starting query
 - `--fzf` to browse everything in your saved folders interactively
@@ -48,6 +49,16 @@ If `~/.local/bin` is not in your `PATH`, the installer offers to add it to your 
 
 To use a different install location: `PREFIX=/some/path ./install.sh` (the binary goes to `/some/path/bin`).
 
+### Update
+
+```sh
+cd easyMove
+git pull
+./install.sh
+```
+
+Your config is never touched, so your saved folders stay as they are. Release notes for each version are on the [Releases page](https://github.com/tanilhamdi/easyMove/releases).
+
 ### Build by hand
 
 ```sh
@@ -73,10 +84,11 @@ This removes the binary and keeps your config. Delete `~/.config/easyMove/` your
 
 ```
 easyMove <filename>           Find <filename> in your saved folders and move it here
-easyMove --add, -a [path]     Save a folder
+easyMove --latest, -n         Move the most recently modified file from your saved folders
+easyMove --fzf, -f            Pick a file from your saved folders with fzf
+easyMove --add, -a <path>     Save a folder
 easyMove --delete, -d <path>  Remove a saved folder (path exactly as shown by --list)
 easyMove --list, -l           Show all saved folders
-easyMove --fzf, -f            Browse your saved folders with fzf and move the selection here
 easyMove --help, -h           Show this help
 ```
 
@@ -89,9 +101,22 @@ easyMove --list
 
 cd ~/projects/myproject
 easyMove report.pdf        # moves report.pdf here
+easyMove --latest          # moves whatever you changed or downloaded last
 ```
 
 Save folders with their **full path** (`~/Downloads` works because your shell expands it before easyMove sees it).
+
+### Move the most recent file
+
+```sh
+easyMove --latest
+easyMove -n
+```
+
+Looks through your saved folders and moves the file with the newest modification time to the current directory.
+
+- Only regular files are considered: folders, hidden files (names starting with `.`) and unfinished downloads (`.part`, `.crdownload`) are skipped.
+- "Latest" means last **modified**, not last downloaded. Some browsers and tools keep a file's original timestamp, so a file you downloaded today can look older than it is.
 
 ### When the name exists in several folders
 
@@ -128,7 +153,7 @@ Only `y` or `Y` overwrites. Anything else cancels and leaves both files where th
 ## How it works
 
 - Saved folders live in `~/.config/easyMove/easyMove.cfg`, one folder path per line. `--add` appends the path exactly as you typed it.
-- Searching looks at the top level of each saved folder (it does not go into subfolders) and matches the **exact name**, case-sensitive. The fzf fallback lists the same top-level entries.
+- Searching looks at the top level of each saved folder (it does not go into subfolders) and matches the **exact name**, case-sensitive. The fzf fallback and `--latest` look at the same top-level entries.
 - Lines starting with `#` in the config are ignored. Note that `--delete` rewrites the file, which removes comment lines.
 - You can also edit the config file by hand.
 - The fzf fallback uses two temporary files in `~/.config/easyMove/` and removes them when it finishes.
@@ -151,6 +176,7 @@ easyMove is stable for everyday use. These are the current rough edges, and they
 - Skip missing saved folders with a warning instead of stopping
 - Store absolute paths in `--add`
 - Clear error messages for move failures and missing fzf
+- `--version` flag
 - Tab autocomplete for file names (GNU readline)
 
 ## Contributing

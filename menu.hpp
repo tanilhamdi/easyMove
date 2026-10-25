@@ -19,4 +19,5 @@ public:
   void deletePath(string path);
   void move(string targetFile);
   vector<fs::path> listDirectory();
+  void latest();
 };
